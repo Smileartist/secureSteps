@@ -20,12 +20,13 @@ import {
 
 // --- CONFIGURATION (REPLACE WITH YOUR KEYS) ---
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDWYvlqzfmVDDVtmqumzIS5mN_77YFXI1A",
+  authDomain: "steps-2fec8.firebaseapp.com",
+  projectId: "steps-2fec8",
+  storageBucket: "steps-2fec8.firebasestorage.app",
+  messagingSenderId: "251576412084",
+  appId: "1:251576412084:web:de06501986cc97a049b4e1",
+  measurementId: "G-TQLBKWY1JV"
 };
 
 // Initialize
