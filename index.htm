@@ -3,160 +3,399 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secure Steps - Walk with Confidence</title>
+    <title>Secure Steps - Full App</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* UI OVERRIDES & FIXES */
+        #app-viewport { position: relative; width: 100%; height: 100%; overflow: hidden; }
+        .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; background: var(--bg-color, #F8F9FA); transform: translateX(100%); transition: transform 0.3s ease; display: none; }
+        .page.active { transform: translateX(0); display: block; }
+        
+        .contact-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .auth-toggle { margin-top: 15px; font-size: 0.9rem; color: #666; cursor: pointer; text-align: center; }
+        .auth-toggle span { color: #3b82f6; font-weight: bold; text-decoration: underline; }
+
+        /* RISK MODE BUTTON */
+        .risk-btn-container { position: absolute; top: 80px; right: 10px; z-index: 1000; }
+        #risk-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: white; color: #ef4444; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 1.2rem; cursor: pointer; transition: all 0.3s; }
+        #risk-btn.active { background: #ef4444; color: white; animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    </style>
 </head>
 <body>
 
     <svg style="display: none;">
         <symbol id="app-logo" viewBox="0 0 100 100">
-            <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <path fill="url(#grad1)" d="M50,0 C22.4,0,0,22.4,0,50 C0,77.6,50,100,50,100 C50,100,100,77.6,100,50 C100,22.4,77.6,0,50,0 Z"/>
-            <path fill="white" d="M45,35 C42,32, 38,35, 40,40 C42,45, 50,55, 48,65 C46,75, 40,80, 50,85 C60,80, 65,65, 60,50 C58,45, 50,40, 45,35 M35,25 A3,3 0 1,1 41,25 A3,3 0 1,1 35,25 M45,22 A3,3 0 1,1 51,22 A3,3 0 1,1 45,22 M55,25 A3,3 0 1,1 61,25 A3,3 0 1,1 55,25 M63,32 A3,3 0 1,1 69,32 A3,3 0 1,1 63,32"/>
+            <path fill="#3b82f6" d="M50,0 C22.4,0,0,22.4,0,50 C0,77.6,50,100,50,100 C50,100,100,77.6,100,50 C100,22.4,77.6,0,50,0 Z"/>
+            <path fill="white" d="M45,35 C42,32, 38,35, 40,40 C42,45, 50,55, 48,65 C46,75, 40,80, 50,85 C60,80, 65,65, 60,50 C58,45, 50,40, 45,35 M35,25 A3,3 0 1,1 41,25 M45,22 A3,3 0 1,1 51,22 M55,25 A3,3 0 1,1 61,25 M63,32 A3,3 0 1,1 69,32"/>
         </symbol>
     </svg>
 
     <div id="login-screen" class="login-container">
         <div class="login-box">
-            <svg class="logo-large"><use href="#app-logo"></use></svg>
+            <svg style="width: 60px; height: 60px; margin-bottom: 10px;"><use href="#app-logo"></use></svg>
+            <h1 id="auth-title">Secure Steps</h1>
+            <p id="auth-subtitle">Walk with Confidence.</p>
             
-            <h1>Secure Steps</h1>
-            <p>Walk with Confidence.</p>
-            
-            <form id="login-form" onsubmit="window.handleLogin(event)">
-                <input type="email" placeholder="Email" required>
-                <input type="password" placeholder="Password" required>
-                <button type="submit" class="btn-primary">Secure Login</button>
+            <form id="auth-form">
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit" class="btn-primary" id="auth-btn">Secure Login</button>
             </form>
-            <p class="terms">Powered by Community Safety</p>
+            
+            <p id="error-msg" style="color: #ef4444; margin-top: 10px; font-size: 0.9rem; min-height: 20px; text-align: center;"></p>
+            
+            <p class="auth-toggle" onclick="toggleAuthMode()">
+                <span id="toggle-text">New here? Create an Account</span>
+            </p>
         </div>
     </div>
 
     <div id="app-container" class="hidden">
         
         <header class="app-header">
-            <div class="logo-container">
-                <svg class="logo-small"><use href="#app-logo"></use></svg>
-                <span class="logo-text">Secure Steps</span>
+            <div class="logo-container" style="display: flex; align-items: center; gap: 10px;">
+                <svg style="width: 30px; height: 30px;"><use href="#app-logo"></use></svg>
+                <span style="font-weight: 800; color: #3b82f6;">Secure Steps</span>
             </div>
             <button onclick="toggleTheme()" class="theme-toggle"><i class="fas fa-moon"></i></button>
         </header>
 
         <main id="app-viewport">
+            
             <section id="page-map" class="page active">
                 <div id="map"></div>
-                <div class="map-overlay-tools">
-                    <button onclick="locateUser()" class="tool-btn"><i class="fas fa-crosshairs"></i></button>
-                    <button onclick="enableAddRiskMode()" class="tool-btn warning" id="add-risk-btn"><i class="fas fa-exclamation-triangle"></i></button>
+                
+                <div class="risk-btn-container">
+                    <button id="risk-btn" onclick="toggleRiskMode()"><i class="fas fa-exclamation-triangle"></i></button>
                 </div>
-                <div class="sos-container">
-                    <button id="sos-btn" class="sos-pulse">SOS</button>
-                </div>
-                <div id="risk-instruction" class="instruction-banner hidden">
-                    Tap map to mark danger zone
-                    <button onclick="disableAddRiskMode()">Cancel</button>
-                </div>
+
+                <div class="sos-container"><button id="sos-btn" class="sos-pulse">SOS</button></div>
             </section>
 
             <section id="page-contacts" class="page">
-                <div class="content-wrapper">
+                <div class="content-wrapper" style="padding: 20px;">
                     <h2>My Circle</h2>
-                    <p class="subtitle">Trusted contacts for SOS alerts.</p>
-                    <div class="input-group">
-                        <input type="text" id="c-name" placeholder="Name">
-                        <input type="tel" id="c-phone" placeholder="Phone">
-                        <button onclick="addContact()" class="btn-add"><i class="fas fa-plus"></i></button>
+                    <p style="color: #666; margin-bottom: 20px;">Trusted contacts for SOS alerts.</p>
+                    
+                    <div class="input-group" style="display: flex; gap: 8px; margin-bottom: 20px; align-items: center;">
+                        <input type="text" id="c-name" placeholder="Name" style="flex: 1; min-width: 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="tel" id="c-phone" placeholder="Phone" style="flex: 1; min-width: 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <button onclick="addContact()" style="flex-shrink: 0; width: 42px; height: 42px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer;"><i class="fas fa-plus"></i></button>
                     </div>
-                    <ul id="contact-list" class="styled-list"></ul>
+
+                    <div id="contact-list">
+                        <p style="text-align: center; color: #999;">Loading...</p>
+                    </div>
                 </div>
             </section>
 
             <section id="page-settings" class="page">
-                <div class="content-wrapper">
+                <div class="content-wrapper" style="padding: 20px;">
                     <h2>Settings</h2>
-                    <div class="setting-card">
-                        <div class="setting-row">
-                            <span>Dark Theme</span>
-                            <label class="switch">
-                                <input type="checkbox" id="dark-mode-toggle" onchange="toggleTheme()">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Dark Theme</span>
+                        <i class="fas fa-toggle-off" id="theme-icon" style="font-size: 1.5rem; color: #ccc;" onclick="toggleTheme()"></i>
                     </div>
-                    <button onclick="window.handleLogout()" class="btn-logout">Log Out</button>
+                    
+                    <button onclick="window.handleLogout()" style="width: 100%; padding: 15px; background: #ef4444; color: white; border: none; border-radius: 12px; margin-top: 30px; font-weight: bold;">Log Out</button>
+                    
+                    <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.8rem;">Secure Steps v2.0<br>Connected to Firestore</p>
                 </div>
             </section>
+
         </main>
 
         <nav class="bottom-nav">
-            <div class="nav-item active" onclick="navTo('page-map', this)">
+            <div class="nav-item active" onclick="switchTab('page-map', this)">
                 <i class="fas fa-map-marked-alt"></i> <span>Map</span>
             </div>
-            <div class="nav-item" onclick="navTo('page-contacts', this)">
+            <div class="nav-item" onclick="switchTab('page-contacts', this)">
                 <i class="fas fa-users"></i> <span>Contacts</span>
             </div>
-            <div class="nav-item" onclick="navTo('page-settings', this)">
+            <div class="nav-item" onclick="switchTab('page-settings', this)">
                 <i class="fas fa-cog"></i> <span>Settings</span>
             </div>
         </nav>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script type="module">
-        import { signInUser, onAuthStateChange, getRiskyZones, getUserProfile, signOutUser, addRiskyZone } from './supabase-handler.js';
+        // 1. IMPORT FIREBASE
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, collection, arrayUnion, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Login Logic
-        window.handleLogin = async (e) => {
+        // 2. CONFIGURATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWYvlqzfmVDDVtmqumzIS5mN_77YFXI1A",
+            authDomain: "steps-2fec8.firebaseapp.com",
+            projectId: "steps-2fec8",
+            storageBucket: "steps-2fec8.firebasestorage.app",
+            messagingSenderId: "251576412084",
+            appId: "1:251576412084:web:de06501986cc97a049b4e1",
+            measurementId: "G-TQLBKWY1JV"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // GLOBAL STATE
+        let map;
+        let isRiskMode = false;
+        let riskMarkers = [];
+
+        // --- AUTH & LOGIN LOGIC ---
+        let isLoginMode = true;
+
+        window.toggleAuthMode = function() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').innerText = isLoginMode ? "Secure Steps" : "Create Account";
+            document.getElementById('auth-btn').innerText = isLoginMode ? "Secure Login" : "Sign Up";
+            document.getElementById('toggle-text').innerText = isLoginMode ? "New here? Create an Account" : "Already have an account? Login";
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.querySelector('input[type="email"]').value;
-            const password = document.querySelector('input[type="password"]').value;
-            await signInUser(email, password);
-        };
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+            const btn = document.getElementById('auth-btn');
 
-        // Logout Logic
+            errorMsg.innerText = "";
+            btn.innerText = "Processing...";
+
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    // Create Profile
+                    await setDoc(doc(db, "users", cred.user.uid), { 
+                        email: email, 
+                        contacts: [],
+                        createdAt: serverTimestamp()
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                errorMsg.innerText = error.message.replace("Firebase: ", "");
+                btn.innerText = isLoginMode ? "Secure Login" : "Sign Up";
+            }
+        });
+
         window.handleLogout = async () => {
-            await signOutUser();
-            // Auth State Change listener will handle the screen switch
-        };
+            await signOut(auth);
+            location.reload();
+        }
 
-        // Auth Listener
-        onAuthStateChange(async (user) => {
+        // --- APP INITIALIZATION ---
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                console.log("Welcome to Secure Steps:", user.email);
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
                 
-                // Initialize Map Data
-                const zones = await getRiskyZones();
-                zones.forEach(z => window.renderRiskZone(z)); 
-                
-                // Initialize Profile
-                const profile = await getUserProfile();
-                if(profile?.emergency_contacts) {
-                    localStorage.setItem('myContacts', JSON.stringify(profile.emergency_contacts));
-                    window.renderContacts(); // Refreshes UI
-                }
-                
-                setTimeout(window.initMap, 100);
+                // Init Features — wait for map before starting real-time listeners
+                setTimeout(() => {
+                    initMap();
+                    listenToRiskZones(); // Safe to start now that map exists
+                }, 500);
+                loadContacts();
             } else {
                 document.getElementById('app-container').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
             }
         });
 
-        // Link Backend to Frontend Risk Reporting
-        window.backendReportZone = async (lat, lng) => {
-            await addRiskyZone(lat, lng, "Reported via Secure Steps App");
-        };
-    </script>
+        // --- MAP & RISK ZONE LOGIC ---
+        function initMap() {
+            if(map) return;
+            map = L.map('map').setView([28.6139, 77.2090], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            // Locate User
+            map.locate({setView: true, maxZoom: 16});
+            map.on('locationfound', (e) => {
+                L.marker(e.latlng).addTo(map).bindPopup("You").openPopup();
+                L.circle(e.latlng, {radius: e.accuracy/2}).addTo(map);
+            });
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="script.js"></script>
+            // Handle Map Clicks (For Adding Red Zones)
+            map.on('click', async (e) => {
+                if(!isRiskMode) return;
+
+                const reason = prompt("Why is this area dangerous? (e.g., No lights, Harassment)");
+                if(reason) {
+                    try {
+                        await addDoc(collection(db, "risk_zones"), {
+                            lat: e.latlng.lat,
+                            lng: e.latlng.lng,
+                            reason: reason,
+                            reportedBy: auth.currentUser.email,
+                            timestamp: serverTimestamp()
+                        });
+                        alert("Red Zone Added! Everyone will see this warning.");
+                        toggleRiskMode(); // Turn off mode
+                    } catch (err) {
+                        alert("Error adding zone: " + err.message);
+                    }
+                }
+            });
+        }
+
+        // Toggle Risk Mode
+        window.toggleRiskMode = function() {
+            isRiskMode = !isRiskMode;
+            const btn = document.getElementById('risk-btn');
+            const mapContainer = document.getElementById('map');
+            
+            if(isRiskMode) {
+                btn.classList.add('active');
+                mapContainer.style.cursor = "crosshair";
+                alert("🔴 RISK MODE ON\nTap anywhere on the map to mark a danger zone.");
+            } else {
+                btn.classList.remove('active');
+                mapContainer.style.cursor = "";
+            }
+        }
+
+        // Real-time Listener for Red Zones
+        function listenToRiskZones() {
+            const q = collection(db, "risk_zones");
+            onSnapshot(q, (snapshot) => {
+                // Clear old markers
+                riskMarkers.forEach(layer => map.removeLayer(layer));
+                riskMarkers = [];
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const circle = L.circle([data.lat, data.lng], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: 300
+                    }).addTo(map).bindPopup(`<b>⚠️ DANGER ZONE</b><br>${data.reason}`);
+                    riskMarkers.push(circle);
+                });
+            });
+        }
+
+        // --- CONTACTS LOGIC ---
+        async function loadContacts() {
+            const user = auth.currentUser;
+            const docRef = doc(db, "users", user.uid);
+            
+            // Real-time listener for contacts
+            onSnapshot(docRef, (docSnap) => {
+                const list = document.getElementById('contact-list');
+                list.innerHTML = ""; 
+
+                if (docSnap.exists() && docSnap.data().contacts) {
+                    const contacts = docSnap.data().contacts;
+                    if(contacts.length === 0) {
+                        list.innerHTML = "<p style='text-align:center; color:#999;'>No contacts yet.</p>";
+                        return;
+                    }
+                    
+                    contacts.forEach((c) => {
+                        const div = document.createElement('div');
+                        div.className = 'contact-item';
+                        div.innerHTML = `
+                            <div><strong>${c.name}</strong><br><small>${c.phone}</small></div>
+                            <i class="fas fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteContact('${c.phone}')"></i>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+            });
+        }
+
+        window.addContact = async function() {
+            const name = document.getElementById('c-name').value.trim();
+            const phone = document.getElementById('c-phone').value.trim();
+            const user = auth.currentUser;
+
+            if(name && phone) {
+                try {
+                    // setDoc with merge:true creates the doc if it doesn't exist yet
+                    await setDoc(doc(db, "users", user.uid), {
+                        contacts: arrayUnion({ name: name, phone: phone })
+                    }, { merge: true });
+                    document.getElementById('c-name').value = "";
+                    document.getElementById('c-phone').value = "";
+                } catch(err) {
+                    alert("Could not save contact: " + err.message);
+                }
+            } else {
+                alert("Please enter both a name and phone number.");
+            }
+        }
+
+        // Delete Contact (Read -> Filter -> Write)
+        window.deleteContact = async function(phoneToDelete) {
+            const user = auth.currentUser;
+            if(confirm("Remove contact?")) {
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                const currentContacts = docSnap.data().contacts || [];
+                const newContacts = currentContacts.filter(c => c.phone !== phoneToDelete);
+                await updateDoc(docRef, { contacts: newContacts });
+            }
+        }
+
+        // --- SOS ALERT LOGIC ---
+        document.getElementById('sos-btn').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if(!user) return;
+
+            // 1. Get Location
+            if(!navigator.geolocation) return alert("GPS not available");
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                try {
+                    // 2. Save Alert to Database
+                    const alertRef = await addDoc(collection(db, "active_alerts"), {
+                        uid: user.uid,
+                        email: user.email,
+                        location: { lat, lng },
+                        timestamp: serverTimestamp(),
+                        status: "ACTIVE"
+                    });
+
+                    // 3. Notify User
+                    alert(`🚨 SOS SENT! 🚨\n\nAlert ID: ${alertRef.id}\nLocation recorded in database.\nNotifications sent to your contacts.`);
+                } catch (err) {
+                    alert("SOS Failed: " + err.message);
+                }
+
+            }, () => alert("Could not get GPS location."));
+        });
+
+        // --- NAVIGATION TABS ---
+        window.switchTab = function(pageId, navItem) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navItem.classList.add('active');
+            if(pageId === 'page-map' && map) setTimeout(() => map.invalidateSize(), 200);
+        }
+
+        window.toggleTheme = function() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            const icon = document.getElementById('theme-icon');
+            if(icon) icon.className = isDark ? "fas fa-toggle-off" : "fas fa-toggle-on";
+        }
+    </script>
 </body>
 </html>
