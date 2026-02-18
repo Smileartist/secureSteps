@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
     <style>
         /* UI OVERRIDES & FIXES */
@@ -28,16 +29,31 @@
 </head>
 <body>
 
-    <svg style="display: none;">
-        <symbol id="app-logo" viewBox="0 0 100 100">
-            <path fill="#3b82f6" d="M50,0 C22.4,0,0,22.4,0,50 C0,77.6,50,100,50,100 C50,100,100,77.6,100,50 C100,22.4,77.6,0,50,0 Z"/>
-            <path fill="white" d="M45,35 C42,32, 38,35, 40,40 C42,45, 50,55, 48,65 C46,75, 40,80, 50,85 C60,80, 65,65, 60,50 C58,45, 50,40, 45,35 M35,25 A3,3 0 1,1 41,25 M45,22 A3,3 0 1,1 51,22 M55,25 A3,3 0 1,1 61,25 M63,32 A3,3 0 1,1 69,32"/>
-        </symbol>
-    </svg>
 
     <div id="login-screen" class="login-container">
         <div class="login-box">
-            <svg style="width: 60px; height: 60px; margin-bottom: 10px;"><use href="#app-logo"></use></svg>
+            <svg width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:10px;">
+                <defs>
+                    <linearGradient id="lg-login" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#60a5fa"/>
+                        <stop offset="100%" stop-color="#1d4ed8"/>
+                    </linearGradient>
+                </defs>
+                <path d="M50 5 L87 18 L87 54 Q87 76 50 92 Q13 76 13 54 L13 18 Z" fill="url(#lg-login)"/>
+                <path d="M50 12 L81 24 L81 53 Q81 71 50 86 Q19 71 19 53 L19 24 Z" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+                <g transform="rotate(22,62,37)">
+                    <ellipse cx="62" cy="37" rx="6.5" ry="10" fill="white" opacity="0.95"/>
+                    <circle cx="57.5" cy="27"   r="2.7" fill="white" opacity="0.95"/>
+                    <circle cx="62"   cy="25.5"  r="2.4" fill="white" opacity="0.95"/>
+                    <circle cx="66.5" cy="27"    r="2.1" fill="white" opacity="0.95"/>
+                </g>
+                <g transform="rotate(-22,38,63)">
+                    <ellipse cx="38" cy="63" rx="6.5" ry="10" fill="white" opacity="0.95"/>
+                    <circle cx="42.5" cy="53"   r="2.7" fill="white" opacity="0.95"/>
+                    <circle cx="38"   cy="51.5"  r="2.4" fill="white" opacity="0.95"/>
+                    <circle cx="33.5" cy="53"    r="2.1" fill="white" opacity="0.95"/>
+                </g>
+            </svg>
             <h1 id="auth-title">Secure Steps</h1>
             <p id="auth-subtitle">Walk with Confidence.</p>
             
@@ -59,7 +75,28 @@
         
         <header class="app-header">
             <div class="logo-container" style="display: flex; align-items: center; gap: 10px;">
-                <svg style="width: 30px; height: 30px;"><use href="#app-logo"></use></svg>
+                <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="lg-header" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#60a5fa"/>
+                            <stop offset="100%" stop-color="#1d4ed8"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M50 5 L87 18 L87 54 Q87 76 50 92 Q13 76 13 54 L13 18 Z" fill="url(#lg-header)"/>
+                    <path d="M50 12 L81 24 L81 53 Q81 71 50 86 Q19 71 19 53 L19 24 Z" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+                    <g transform="rotate(22,62,37)">
+                        <ellipse cx="62" cy="37" rx="6.5" ry="10" fill="white" opacity="0.95"/>
+                        <circle cx="57.5" cy="27"  r="2.7" fill="white" opacity="0.95"/>
+                        <circle cx="62"   cy="25.5" r="2.4" fill="white" opacity="0.95"/>
+                        <circle cx="66.5" cy="27"   r="2.1" fill="white" opacity="0.95"/>
+                    </g>
+                    <g transform="rotate(-22,38,63)">
+                        <ellipse cx="38" cy="63" rx="6.5" ry="10" fill="white" opacity="0.95"/>
+                        <circle cx="42.5" cy="53"  r="2.7" fill="white" opacity="0.95"/>
+                        <circle cx="38"   cy="51.5" r="2.4" fill="white" opacity="0.95"/>
+                        <circle cx="33.5" cy="53"   r="2.1" fill="white" opacity="0.95"/>
+                    </g>
+                </svg>
                 <span style="font-weight: 800; color: #3b82f6;">Secure Steps</span>
             </div>
             <button onclick="toggleTheme()" class="theme-toggle"><i class="fas fa-moon"></i></button>
